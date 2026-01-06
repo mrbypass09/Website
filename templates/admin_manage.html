@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #0d0d0d; color: #fff; margin: 20px; }
+        
+        .container { max-width: 1400px; margin: auto; background: #1c1c1c; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
+        h1 { color: #00FFFF; text-align: center; margin-bottom: 20px; }
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .success { background-color: #4CAF50; }
+        .error { background-color: #f44336; }
+        
+        
+        .content-layout { 
+            display: flex; 
+            gap: 30px; 
+            justify-content: space-between; 
+        }
+        
+        .user-list-section { 
+            flex-grow: 1; 
+            min-width: 700px; 
+        }
+        .add-user-section { 
+            width: 350px; 
+            flex-shrink: 0; 
+            order: 2; 
+        }
+
+        
+        .add-form { background: #2c2c2c; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #444; }
+        .add-form input, .add-form button { padding: 10px; margin: 5px 0; border: none; border-radius: 4px; display: block; width: 100%; box-sizing: border-box; }
+        .add-form input[type="text"], .add-form input[type="date"] { background: #3c3c3c; color: #fff; }
+        .add-form button { background-color: #FFA500; color: #000; font-weight: bold; margin-top: 15px; }
+
+        
+        .table-wrapper {
+            max-height: 400px; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            border: 1px solid #444;
+            border-radius: 6px;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 0; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background-color: #3c3c3c; color: #00FFFF; position: sticky; top: 0; z-index: 10; }
+        tr:nth-child(even) { background-color: #2c2c2c; }
+        .expired { background-color: #581515 !important; color: #ff9999; }
+        
+        /* Action Buttons */
+        .delete-btn { background-color: #f44336; color: white; cursor: pointer; border: none; border-radius: 4px; padding: 8px; font-size: 0.9em; }
+        .delete-btn:hover { background-color: #cc0000; }
+        .edit-btn { background-color: #008CBA; color: white; cursor: pointer; border: none; border-radius: 4px; padding: 8px; font-size: 0.9em; margin-right: 5px; }
+        .edit-btn:hover { background-color: #007bb5; }
+        .back-btn { display: block; margin-bottom: 20px; color: #00FFFF; text-decoration: none; font-size: 1.1em; }
+        .back-btn:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('home') }}" class="back-btn">← Back to Home</a>
+        <h1>Uid Management Panel</h1>
+        
+        {% if success %}
+            <div class="message success">{{ success }}</div>
+        {% endif %}
+        
+        {% if error %}
+            <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <div class="content-layout">
+            
+            <div class="user-list-section">
+                <h2>Active Users ({{ users|length }})</h2>
+                
+                <div class="table-wrapper">
+                    {% if users %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>UID</th>
+                                <th>Username</th>
+                                <th>Added On</th>
+                                <th>Expiry Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for uid, data in users %}
+                            {% set expiry_date = data.expiry_date|default('9999-12-31') %}
+                            {% set row_class = 'expired' if expiry_date and (data.expiry_date|string < today|string) else '' %}
+                            
+                            <tr class="{{ row_class }}">
+                                <td>{{ uid }}</td>
+                                <td>{{ data.username|default('N/A') }}</td>
+                                <td>{{ data.added_on|default('N/A') }}</td>
+                                <td class="expiry-cell" data-uid="{{ uid }}">
+                                    {{ data.expiry_date|default('N/A') }}
+                                    <form method="POST" style="display:none;" class="edit-form-{{ uid }}">
+                                        <input type="hidden" name="action" value="edit_expiry">
+                                        <input type="hidden" name="uid_to_edit" value="{{ uid }}">
+                                        <input type="date" name="new_expiry_date" value="{{ data.expiry_date|default('') }}" required style="width: 120px;">
+                                        <button type="submit" class="edit-btn" style="background-color: #4CAF50;">Save</button>
+                                        <button type="button" class="delete-btn" onclick="toggleEdit('{{ uid }}')">Cancel</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <button type="button" class="edit-btn" onclick="toggleEdit('{{ uid }}')">Edit Date</button>
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to BAN/DELETE UID {{ uid }}?');">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="uid_to_delete" value="{{ uid }}">
+                                        <button type="submit" class="delete-btn">BAN/Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p style="color: #ccc; padding: 10px;">No active users found.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="add-user-section">
+                <h2>Add New User</h2>
+                <form method="POST" class="add-form">
+                    <input type="hidden" name="action" value="add">
+                    <input type="text" name="username" placeholder="Username (e.g. VIP User)" required>
+                    <input type="text" name="user_id" placeholder="User ID (UID)" required>
+                    <input type="date" name="expiry_date" required>
+                    <button type="submit">Add User</button>
+                </form>
+            </div>
+            
+        </div> </div>
+
+    <script>
+        function toggleEdit(uid) {
+            const cell = document.querySelector(`.expiry-cell[data-uid="${uid}"]`);
+            const form = document.querySelector(`.edit-form-${uid}`);
+            
+            const isEditing = form.style.display !== 'none';
+            if (isEditing) {
+                form.style.display = 'none';
+                if (cell.firstChild) cell.firstChild.nodeValue = cell.querySelector('input[name="new_expiry_date"]').value; 
+                cell.querySelector('.edit-btn').style.display = 'inline';
+            } else {
+                form.style.display = 'inline';
+                if (cell.firstChild) cell.firstChild.nodeValue = ''; 
+                cell.querySelector('.edit-btn').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

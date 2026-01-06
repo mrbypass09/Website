@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireHex Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #333; color: #fff; margin: 20px; }
+        .container { max-width: 800px; margin: auto; background: #222; padding: 20px; border-radius: 8px; }
+        h1 { color: #FFA500; text-align: center; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #555; background: #444; color: #fff; border-radius: 4px; }
+        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; }
+        button:hover { background-color: #45a049; }
+        .message { padding: 10px; margin-top: 15px; border-radius: 4px; text-align: center; }
+        .success { background-color: #008CBA; }
+        .error { background-color: #f44336; }
+        .user-list { margin-top: 30px; }
+        .user-list h2 { color: #FFA500; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: left; }
+        th { background-color: #444; color: #FFA500; }
+        tr:nth-child(even) { background-color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FireHex Admin Panel</h1>
+        
+        {% if success %}
+            <div class="message success">✅ User saved successfully! uid.txt updated.</div>
+        {% endif %}
+        
+        {% if error %}
+            <div class="message error">❌ Error: {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            
+            <label for="username">Username (Mandatory)</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="user_id">User ID (UID)</label>
+            <input type="text" id="user_id" name="user_id" required>
+
+            <label for="expiry_date">Expiry Date (YYYY-MM-DD)</label>
+            <input type="date" id="expiry_date" name="expiry_date" required>
+
+            <button type="submit">Add User & Update Files</button>
+        </form>
+
+        <div class="user-list">
+            <h2>Active Users ({{ users|length }})</h2>
+            {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>UID</th>
+                        <th>Username</th>
+                        <th>Expiry Date</th>
+                        <th>Added On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for uid, data in users %}
+                    <tr>
+                        <td>{{ uid }}</td>
+                        <td>{{ data.username }}</td>
+                        <td>{{ data.expiry_date }}</td>
+                        <td>{{ data.added_on.split(' ')[0] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: #ccc;">No active users found.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

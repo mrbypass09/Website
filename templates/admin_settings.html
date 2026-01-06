@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #0d0d0d; color: #fff; margin: 20px; }
+        .container { max-width: 600px; margin: auto; background: #1c1c1c; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); }
+        h1 { color: #00FFFF; text-align: center; margin-bottom: 20px; }
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .success { background-color: #4CAF50; }
+        .error { background-color: #f44336; }
+        
+        label { display: block; margin-top: 15px; font-weight: bold; color: #FFA500; }
+        /* টেক্সট ইনপুট এবং বাটন স্টাইল */
+        input[type="text"] { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #444; background: #3c3c3c; color: #fff; border-radius: 4px; }
+        .save-btn { background-color: #008CBA; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 25px; font-size: 16px; font-weight: bold; }
+        .save-btn:hover { background-color: #007bb5; }
+        
+        .back-btn { display: block; margin-bottom: 20px; color: #00FFFF; text-decoration: none; font-size: 1.1em; }
+        .back-btn:hover { text-decoration: underline; }
+
+        /* সার্টিফিকেট কোড দেখানোর জন্য নতুন বাটন স্টাইল */
+        .cert-btn-container { margin-top: 15px; display: flex; align-items: center; gap: 10px;}
+        .cert-btn {
+            background-color: #FFA500;
+            color: #000;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+        .cert-btn:hover { background-color: #cc8400; }
+        
+        /* টেক্সট এরিয়া স্টাইল */
+        #cert-code-display {
+            width: 100%;
+            height: 250px;
+            margin-top: 15px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #444;
+            background: #000;
+            color: #00FF00; /* কোডের জন্য সবুজ রঙ */
+            font-family: monospace;
+            resize: none;
+            border-radius: 4px;
+            display: none; /* ডিফল্টভাবে লুকানো থাকবে */
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('home') }}" class="back-btn">← Back to Home</a>
+        <h1>⚙️ VIP Panel Settings</h1>
+        
+        {% if success %}
+            <div class="message success">{{ success }}</div>
+        {% endif %}
+        
+        {% if error %}
+            <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            
+            <label for="cert_path">Certificate Path</label>
+            <div class="cert-btn-container">
+                <input type="text" id="cert_path" name="cert_path" 
+                       value="{{ settings.cert_path }}" 
+                       placeholder="/root/.mitmproxy/mitmproxy-ca-cert.cer" required>
+                
+                <button type="button" class="cert-btn" onclick="toggleCertCode()">View Code</button>
+            </div>
+            
+            <textarea id="cert-code-display" readonly>
+{{ certificate_code }}
+            </textarea>
+
+
+            <label for="proxy_address">Proxy Address</label>
+            <input type="text" id="proxy_address" name="proxy_address" 
+                   value="{{ settings.proxy_address }}" 
+                   placeholder="http://185.211.6.239:8082" required>
+
+            <button type="submit" class="save-btn">Save Settings</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleCertCode() {
+            const textarea = document.getElementById('cert-code-display');
+            const button = document.querySelector('.cert-btn');
+
+            if (textarea.style.display === 'none' || textarea.style.display === '') {
+                textarea.style.display = 'block';
+                button.textContent = 'Hide Code';
+            } else {
+                textarea.style.display = 'none';
+                button.textContent = 'View Code';
+            }
+        }
+    </script>
+</body>
+</html>
